@@ -22,6 +22,6 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
-##Teams
-###Bishal Bashyal(075BCT026)
-###Janak Sharma(075BCT040)
+## Teams
+### Bishal Bashyal(075BCT026)
+### Janak Sharma(075BCT040)
