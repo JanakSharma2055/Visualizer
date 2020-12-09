@@ -50,41 +50,31 @@ inline Coordinate2D operator+(Coordinate2D& lhs, const Coordinate2D& rhs) { //+ 
     return Coordinate2D(lhs.x() + rhs.x(), lhs.y() + rhs.y());
 }
 
-struct equalFunc
-{
-    bool operator()(const Coordinate2D& lhs, const Coordinate2D& rhs) const //Use pending to see
-    {
-        /*return lhs.x() == rhs.x() && lhs.y() == rhs.y();*/
-        return make_pair(lhs.x(), lhs.y()) == make_pair(rhs.x(), rhs.y()); //compares two pairs by making them
-    }
-};
+
 
 struct hashFunc
 {
-    size_t operator()(const Coordinate2D& coordinate) const  //Use Pending to see
+    size_t operator()(const Coordinate2D& coordinate) const  
     {
         size_t h1 = std::hash<int>()(coordinate.x());
         size_t h2 = std::hash<int>()(coordinate.y());
-        /*cout << h1 <<endl;
-        cout << h2<< endl;
-        size_t r = h1 ^ (h2 << 1);
-        cout << r << endl;*/
-        return h1 ^ (h2 << 1);
+        
+        return h1 ^ (h2<<1);//hashing technique source:cpp refrence
     }
 };
 
-struct Node //Use pending to see
+struct Node 
 {
-    int G = 0;
-    int H = 0;
+    int G = 0;//cost
+    
     Coordinate2D m_coordinates;
     Node* m_parent;
-    int F() const { return G + H; };
+    
 
     Node(const Coordinate2D& coordinates, Node* parent = nullptr) : m_coordinates(coordinates), m_parent(parent) {};
 };
 
-inline bool operator<(const Node& lhs, const Node& rhs) //overloading < operator
+inline bool operator<(const Node& lhs, const Node& rhs) 
 {
     return make_pair(lhs.m_coordinates.x(), lhs.m_coordinates.y()) < make_pair(rhs.m_coordinates.x(), rhs.m_coordinates.y()); //compares two pairszx
 }
@@ -95,7 +85,7 @@ struct Block
 {
     RectangleShape m_shape;
     Block() {};
-    Block(const Block& other) : Block(static_cast<int>(other.m_shape.getPosition().x / blockWidth),  //callinf another costructor from wiyhin
+    Block(const Block& other) : Block(static_cast<int>(other.m_shape.getPosition().x / blockWidth),  //callinf another costructor from within
         static_cast<int>(other.m_shape.getPosition().y / blockHeight), other.m_shape.getFillColor(), other.m_shape.getOutlineColor()) {};
 
     Block(Color fillColor, Color outlineColor)
@@ -118,19 +108,18 @@ struct Block
     }
 };
 
-using BlockMap = unordered_map<Coordinate2D, Block, hashFunc, equalFunc>; //using replaces blockmap with unordered map(,,,)
-using BlockPair = pair<Coordinate2D, Block>; //pending
-
+using BlockMap = unordered_map<Coordinate2D, Block, hashFunc>; //using replaces blockmap with unordered map(,,,)
+using BlockPair = pair<Coordinate2D, Block>; 
 BlockMap gridBlocks;
 BlockMap wallBlocks;
 BlockMap pathBlocks;
 BlockPair sourceBlock;
 BlockPair targetBlock;
 
-set<Node*> openSet;
-set<Node*> closedSet;
-Node* current;
-vector<Coordinate2D> path;
+set<Node*> openSet;//for non visitede nodes
+set<Node*> closedSet;//for visited nodes
+Node* current;//traversing node
+vector<Coordinate2D> path;//for backtracking after target is found
 bool running = false;
 bool isTargetFound = false;
 
@@ -163,32 +152,31 @@ void createGrid()
 
 bool traversable(const Coordinate2D coordinate)
 {
-    if (wallBlocks.count(coordinate) //pending
+    if (wallBlocks.count(coordinate) //if wall block then non traversable
         || coordinate.x() < 0
         || coordinate.x() >= numBlockX
         || coordinate.y() < 0
         || coordinate.y() >= numBlockY)
     {
-        return false; //traverse garna milena
+        return false; 
     }
 
-    return true; //milyo my lord
-}
+    return true; }
 
 
 
 void explorePath()
 {
-    if (IsDijkstra) DijkstraVisitedNode++;
+    DijkstraVisitedNode++;//during traversal nodes are visited i.e node count
    
     if (!openSet.empty())
     {
         current = *openSet.begin(); //current le openset ko beginning ma point gariraxa
 
-        // Find node in open with lowest f
+        
         for (Node* node : openSet) //iterator ho
         {
-            if (node->F() <= current->F()) //current pointer le lowest F value bhako node lai point garirako ho
+            if (node->G <= current->G) 
                 current = node;
         }
         //Insert it in the closedSet i,e, visited node
@@ -204,18 +192,21 @@ void explorePath()
         {
             Coordinate2D neighbourPos{ current->m_coordinates + directions[i] };
             //lambda funtion
+            //neighbourPos passed as external variable
+            //iterating on each element of closed set
             auto itClosed = find_if(closedSet.begin(), closedSet.end(), [&neighbourPos](const Node* node)
                 {
-                    return node->m_coordinates == neighbourPos;
+                    return node->m_coordinates == neighbourPos;//checks if the neighbour is  in closed set
+                                                               
                 });
-            //itClosed != closedSet.end() is false if the neighbour node is already visited
+            
             if (!traversable(neighbourPos) || itClosed != closedSet.end())
                 continue;
             //Goto to next neighbour
 
-              //Diagonal direction come after index 3
+              
             int G = current->G + horisontalAndVerticalCost;
-            cout << "G:" << G<<endl;
+           // cout << "G:" << G<<endl;
 
 
             auto itOpen = find_if(openSet.begin(), openSet.end(), [&neighbourPos](const Node* node)
@@ -230,7 +221,6 @@ void explorePath()
             {
                 Node* neighbour = new Node(neighbourPos, current);
                 neighbour->G = G;
-                if (IsDijkstra) neighbour->H = 0;
                
                
                 openSet.insert(neighbour);
